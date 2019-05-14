@@ -25,7 +25,7 @@ from scraperex import Scraper
 
 config = {
     'my_scraping': {
-    	'url': 'https://www.resource.for/scraping/1',
+        'url': 'https://www.resource.for/scraping/1',
         'regex': r'my_regular_expression'
     }
 }
@@ -49,7 +49,7 @@ Each ```config``` item must contain two predefined properties ```url``` and ```r
 
 ```python
     'item_A': {
-    	'url': 'https://www.resource.for/scraping/1',
+        'url': 'https://www.resource.for/scraping/1',
         'regex': r'my_regular_expression'
     }
 ```
@@ -57,12 +57,12 @@ You can rescrape response content as many times as you wish by passing to ```reg
 
 ```python
     'item_B': {
-    	'url': 'https://www.resource.for/scraping/2',
+        'url': 'https://www.resource.for/scraping/2',
         'regex': {
-        	'structure_item': {
-            	'child_structure_item_1': r'my_regular_expression'
+            'structure_item': {
+               'child_structure_item_1': r'my_regular_expression'
             }
-        	'structure_item_1':  r'my_regular_expression_1'
+            'structure_item_1':  r'my_regular_expression_1'
         }
     }
 ```
