@@ -8,10 +8,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='scraperex',
-    version='0.0.3',
+    version='0.0.19',
     description='Web scraper using dynamic proxy and user agent.',
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     url='https://github.com/userforce/scraper',
     author='Tudor Corcimar',
     classifiers=[
@@ -21,8 +21,9 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
     ],
+    license='MIT',
     keywords='scraper proxy user-agent',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(),
     python_requires='>=3.7',
-    install_requires=['re','requests','collections','fake_useragent']
+    install_requires=['requests','fake_useragent']
 )
