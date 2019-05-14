@@ -28,6 +28,15 @@ class ProxyGenerator(object):
         }
 
     def __getDefaultProxyList(self, attempts: int = 0) -> list:
+
+        # TODO: use proxy servers api
+        url = "https://www.proxy-list.download/api/v1/get"
+        payload = {'type':'https', 'country':'US'}
+        response = requests.get(url, params=payload)
+        print(response.text)
+
+        ##
+
         list = []
         resource = DEFAULT_PROXY_RESOURCES[0]
         try:

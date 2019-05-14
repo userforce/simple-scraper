@@ -71,18 +71,12 @@ class Scraperex(object):
 
     def get(self, config: dict):
         result = {}
-        
-        url = "https://www.proxy-list.download/api/v1/get"
-        payload = {'type':'https', 'country':'US'}
-        response = requests.get(url, params=payload)
-        print(response.text)
-
-        # for key, item in config.items():
-        #     hasNoNestedConfig = self.__checkConfigValidity(item, key) 
-        #     if hasNoNestedConfig:
-        #         url = item['url']
-        #         regex = item['regex']
-        #         result[key] = self.__request(item['regex'], item['url'])
-        #     else:
-        #         result[key] = self.get(item)
-        # return result
+        for key, item in config.items():
+            hasNoNestedConfig = self.__checkConfigValidity(item, key) 
+            if hasNoNestedConfig:
+                url = item['url']
+                regex = item['regex']
+                result[key] = self.__request(item['regex'], item['url'])
+            else:
+                result[key] = self.get(item)
+        return result
