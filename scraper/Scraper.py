@@ -1,6 +1,7 @@
 import re
 import requests
 import collections
+import pkgutil
 from fake_useragent import UserAgent
 
 class Scraper():
@@ -15,7 +16,6 @@ class Scraper():
     __proxyIterator = None
 
     def __getDefaultProxyList(self, attempts: int = 0) -> list:
-        ## TODO: Cache proxy list
         list = []
         resource = self.__DEFAULT_PROXY_RESOURCES[0]
         try:
