@@ -23,7 +23,6 @@ class Scraperex(object):
 
     def __findOne(self, regex, text) -> list:
         print(text)
-        print(regex)
         result = re.findall(regex, text, flags=re.IGNORECASE)
         return result
 
@@ -48,7 +47,7 @@ class Scraperex(object):
         return isValid
 
     def __request(self, regex, url: str):
-        proxy=self.proxies.getNextProxy()
+        proxy=self.proxies.getNextProxy(self.isSecuredUrl(url))
         headers = self.__getHeaders()
         text = ''
         failed = False
@@ -68,6 +67,9 @@ class Scraperex(object):
             print('Request failed using [{}] proxy server.'.format(proxy))
             text = self.__request(regex, url)
         return text
+
+    def isSecuredUrl(self, url) -> bool:
+        return (not not next(iter(re.findall('https', url)), None))
 
     def get(self, config: dict):
         result = {}
