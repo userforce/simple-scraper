@@ -19,9 +19,9 @@ pip install scraperex
 * [fake-useragent](https://pypi.org/project/fake-useragent/)
 
 #### Usage
-Basic usage requires definition a dictionary with one item that contains ```url``` to the web resource, and ```regex``` which will extract the data from the response.
+Basic usage requires one paramether of type dictionary which contains ```url``` to the web resource, and ```regex``` which will extract the data from the response.
 ```python
-from scraperex import Scraper
+import scraperex
 
 config = {
     'my_scraping': {
@@ -30,8 +30,7 @@ config = {
     }
 }
 
-scraper = Scraper()
-result = scraper.get(config)
+result = scraperex.find(config)
 ```
 
 #### Config

@@ -8,8 +8,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='scraperex',
-    version='0.1.0',
-    description='Web scraper using dynamic proxy and user agent.',
+    version='0.2.0',
+    description='Scraperex is making ridiculously easy to scrape web resources, staying hidden, by using dynamic proxy and user agent.',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/userforce/scraper',

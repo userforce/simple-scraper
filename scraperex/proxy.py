@@ -1,8 +1,8 @@
 import re
 import requests
 import collections
-
-from ._config import DEFAULT_PROXY_WEB_RESOURCES, DEFAULT_REQUEST_ATTEMPTS, DEFAULT_PROXY_API_RESOURCES
+from random import shuffle
+from .config import DEFAULT_PROXY_WEB_RESOURCE, DEFAULT_REQUEST_ATTEMPTS, DEFAULT_PROXY_API_RESOURCE
 
 class ProxyGenerator(object):
 
@@ -24,13 +24,15 @@ class ProxyGenerator(object):
 
     def __getProxyIterator(self):
         iterator = self.__proxyIterator if not self.__secured else self.__proxyIteratorSecured
-        if ( not iterator or not isinstance(iterator, collections.Iterable) ):
-            self.__setProxyIterator(iter(self.getProxyList(self.__secured)))
+        if (not iterator or not isinstance(iterator, collections.Iterable)):
+            freshList = self.getProxyList(self.__secured)
+            shuffle(freshList)
+            self.__setProxyIterator(iter(freshList))
         return self.__proxyIterator if not self.__secured else self.__proxyIteratorSecured
 
     def getProxyList(self, secured) -> list:
         proxyList = self.__proxyList if not self.__secured else self.__proxyListSecured
-        if ( not proxyList ):
+        if (not proxyList):
             self.setProxyList(self.__getDefaultProxyList())
         return self.__proxyList if not self.__secured else self.__proxyListSecured
 
@@ -47,36 +49,34 @@ class ProxyGenerator(object):
             self.__proxyListSecured = proxyList
 
     def __getDefaultProxyList(self) -> list:
-        proxyList = self.__retry(DEFAULT_REQUEST_ATTEMPTS, self.__getApiProxyList)
-        proxyList = []
-        if not proxyList and not self.__secured:
-            proxyList = self.__retry(DEFAULT_REQUEST_ATTEMPTS, self.__getWebProxyList)
+        # proxyList = self.__retry(DEFAULT_REQUEST_ATTEMPTS, self.getApiProxyList)
+        # if not proxyList and not self.__secured:
+        proxyList = self.__retry(DEFAULT_REQUEST_ATTEMPTS, self.getWebProxyList)
         return proxyList
 
-    def __getApiProxyList(self) -> list:
-        proxyList = []
-        url = DEFAULT_PROXY_API_RESOURCES
-        protocol = 'http' if not self.__secured else 'https'
-        params = { 'type': protocol }
-        response = requests.get(url, params)
-        if (response.status_code == 200):
-            for line in response.text.splitlines():
-                filteredLine = next(iter(re.findall('[\d]{1,3}\.[\d]{1,3}\.[\d]{1,3}:[\d]{1,4}', line)), None)
-                if filteredLine: proxyList.append(filteredLine)
-        return proxyList 
+    # TODO:
+    # def getApiProxyList(self) -> list:
+    #     proxyList = []
+    #     url = DEFAULT_PROXY_API_RESOURCE
+    #     protocol = 'http' if not self.__secured else 'https'
+    #     response = requests.get(url, params={ 'type': protocol })
+    #     print(response.text)
+    #     if (response.status_code == 200):
+    #         for line in response.text.splitlines():
+    #             filteredLine = next(iter(re.findall('[\d]{1,3}\.[\d]{1,3}\.[\d]{1,3}:[\d]{1,4}', line)), None)
+    #     return proxyList 
 
-    def __getWebProxyList(self) -> list:
+    def getWebProxyList(self) -> list:
         proxyList = []
-        resource = DEFAULT_PROXY_WEB_RESOURCES
-        response = requests.get(DEFAULT_PROXY_WEB_RESOURCES)
+        response = requests.get(DEFAULT_PROXY_WEB_RESOURCE)
         if response.status_code == 200:
             proxyList = self.__filterProxyListResponse(response.text)
         return proxyList
 
     def __filterProxyListResponse(self, content) -> list:
         proxyList = []
-        ips = re.findall('<td>([\d]{1,3}\.[\d]{1,3}\.[\d]{1,3}\.[\d]{1,3})</td>', content, flags=re.IGNORECASE)
-        ports = re.findall('<td>([\d]+)</td>', content, flags=re.IGNORECASE)
+        ips = re.findall('<td>([\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3}\\.[\\d]{1,3})</td>', content, flags=re.IGNORECASE)
+        ports = re.findall('<td>([\\d]+)</td>', content, flags=re.IGNORECASE)
         if ( len(ips) != len(ports) ):
             raise Exception('Can\'t find full list of proxy ips.')
         for index in range(len(ips)):
@@ -88,7 +88,7 @@ class ProxyGenerator(object):
         try:
             proxyList = callback()
             attempts -= 1
-            if ( not proxyList and attempts > 0 ):
+            if (not proxyList and attempts > 0):
                 proxyList = self.__retry(attempts, callback)
         except BaseException as error:
             raise Exception("An error occurred while getting proxy list from API.")

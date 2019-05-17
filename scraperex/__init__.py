@@ -1,5 +1,5 @@
 from .scraper import Scraperex
 
-def get(config: dict):
+def find(config: dict):
 	scraper = Scraperex()
-	return scraper.get(config)
+	return scraper.find(config)
