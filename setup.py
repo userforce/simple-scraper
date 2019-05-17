@@ -8,7 +8,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='scraperex',
-    version='0.2.0',
+    version='0.2.1',
     description='Scraperex is making ridiculously easy to scrape web resources, staying hidden, by using dynamic proxy and user agent.',
     long_description=long_description,
     long_description_content_type="text/markdown",
