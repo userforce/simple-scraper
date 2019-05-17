@@ -63,7 +63,7 @@ class Scraperex(object):
             isValid = True
         return isValid
 
-    def find(self, config: dict):
+    def find(self, config: dict, attempts: int):
         result = {}
         for key, item in config.items():
             hasNestedConfig = not self.__checkConfigValidity(item, key)
@@ -75,6 +75,5 @@ class Scraperex(object):
                 method = self.__configGet(item, 'method', str, 'get')
                 json = self.__configGet(item, 'json', bool, False)
                 params = self.__configGet(item, 'params', dict, {})
-                attempts = DEFAULT_REQUEST_ATTEMPTS
                 result[key] = self.__request(regex = regex, url = url, method = method, json = json, params = params, attempts = attempts)
         return result
