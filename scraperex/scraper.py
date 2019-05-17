@@ -1,84 +1,80 @@
 import re
 import requests
 from fake_useragent import UserAgent
-from ._config import DEFAULT_REQUEST_ATTEMPTS
+from .config import DEFAULT_REQUEST_ATTEMPTS
 from .proxy import ProxyGenerator
+from .retreiver import JsonRetreiver, TextRetreiver
 
 class Scraperex(object):
 
-    proxies = None
+    proxyGen = None
+    retreiver = None
 
     def __init__(self):
-        self.proxies = ProxyGenerator()
+        self.proxyGen = ProxyGenerator()
+        self.jsonRet = JsonRetreiver()
+        self.textRet = TextRetreiver()
 
     def __getHeaders(self) -> dict:
         return { 'User-Agent': UserAgent().random }
 
-    def __findInText(self, regex, text) -> dict:
-        if ( type(regex) is dict ):
-            result = self.__findAll(regex, text)
+    def __isSecuredUrl(self, url) -> bool:
+        return (not not next(iter(re.findall('https', url)), False))
+
+    def __configGet(self, item: dict, key: str, itemType, default):
+        if key in item:
+            return item[key] if type(item[key]) is itemType else default
+        return default
+
+    def __extract(self, regex, json, response):
+        if not json:
+            result = self.textRet.findInText(find = regex, text = response.text)
         else:
-            result = self.__findOne(regex, text)
+            result = self.jsonRet.findInJson(json = response.json())
         return result
 
-    def __findOne(self, regex, text) -> list:
-        print(text)
-        result = re.findall(regex, text, flags=re.IGNORECASE)
-        return result
-
-    def __findAll(self, regex, text) -> dict:
+    def __request(self, regex, url: str, method: str, json: bool = False, params: dict = {}, attempts: int = 1):
         result = {}
-        for key, value in regex.items():
-            if ( type(value) is dict):
-                result[key] = self.__findAll(value, text)
-            else:
-                result[key] = self.__findOne(value, text)
-        return result
-
-    def __checkConfigValidity(self, items, key) -> bool:
-        isValid = False
-        hasRequired = type(items) is dict and all(item in ['regex', 'url'] for item in items)
-        if hasRequired:
-            if not type(items['regex']) in [str, dict]:
-                raise Exception('The [{}.regex] must be of type str or dict.'.format(key))
-            if type(items['url']) is not str:
-                raise Exception('The [{}.url] must be of type str.'.format(key))
-            isValid = True
-        return isValid
-
-    def __request(self, regex, url: str):
-        proxy=self.proxies.getNextProxy(self.isSecuredUrl(url))
-        headers = self.__getHeaders()
-        text = ''
         failed = False
+        attempts -= 1
+        proxy = self.proxyGen.getNextProxy(self.__isSecuredUrl(url))
+        headers = self.__getHeaders()
         try:
-            response = requests.get(url, headers=headers, proxies=proxy)
+            response = requests.request(url = url, method = method, data = params, headers = headers, proxies = proxy)
             if response.status_code != 200:
-                print('Request failed with status code [{}] for proxy [{}]'.format(response.status_code, proxy))
                 failed = True
             else:
-                text = self.__findInText(regex, response.text)
+                result = self.__extract(regex = regex, json = json, response = response)
         except (KeyboardInterrupt, SystemExit):
             raise
         except BaseException as error:
             print(error)
             failed = True
-        if failed:
-            print('Request failed using [{}] proxy server.'.format(proxy))
-            text = self.__request(regex, url)
-        return text
+        if failed and attempts > 0:
+            self.__request(regex = regex, url = url, method = method, json = json, params = params, attempts = attempts)
+        return result
 
-    def isSecuredUrl(self, url) -> bool:
-        return (not not next(iter(re.findall('https', url)), None))
+    def __checkConfigValidity(self, items, key) -> bool:
+        isValid = False
+        hasRequired = type(items) is dict and all(item in items for item in ['url'])
+        if hasRequired:
+            if type(items['url']) is not str:
+                raise Exception('The [{}.url] must be of type str.'.format(key))
+            isValid = True
+        return isValid
 
-    def get(self, config: dict):
+    def find(self, config: dict):
         result = {}
         for key, item in config.items():
-            hasNoNestedConfig = self.__checkConfigValidity(item, key) 
-            if hasNoNestedConfig:
-                url = item['url']
-                regex = item['regex']
-                result[key] = self.__request(item['regex'], item['url'])
+            hasNestedConfig = not self.__checkConfigValidity(item, key)
+            if hasNestedConfig:
+                result[key] = self.find(item)
             else:
-                result[key] = self.get(item)
+                regex = self.__configGet(item, 'regex', dict, {})
+                url = self.__configGet(item, 'url', str, '')
+                method = self.__configGet(item, 'method', str, 'get')
+                json = self.__configGet(item, 'json', bool, False)
+                params = self.__configGet(item, 'params', dict, {})
+                attempts = DEFAULT_REQUEST_ATTEMPTS
+                result[key] = self.__request(regex = regex, url = url, method = method, json = json, params = params, attempts = attempts)
         return result
